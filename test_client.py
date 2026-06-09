@@ -61,7 +61,7 @@ async def main() -> None:
         )
 
         print("Sending request (this may take 30-60s while agents chain)...\n")
-        response = await client.send_message(request)
+        response = await client.send_message(request, http_kwargs={"timeout": 600.0})
 
         # Parse response
         result_text = ""

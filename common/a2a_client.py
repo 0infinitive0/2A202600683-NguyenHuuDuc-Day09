@@ -76,7 +76,7 @@ async def delegate(
             "Delegating to %s (depth=%d, trace=%s)", endpoint, depth, trace_id
         )
 
-        response = await client.send_message(request)
+        response = await client.send_message(request, http_kwargs={"timeout": 600.0})
 
         # Extract text from SendMessageResponse
         return _extract_text(response)

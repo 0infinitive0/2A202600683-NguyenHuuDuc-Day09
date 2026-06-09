@@ -172,7 +172,24 @@ def check_compliance_requirements(industry: str, company_size: str) -> str:
     )
 
 
-TOOLS = [search_legal_database, calculate_penalty, check_compliance_requirements]
+@tool
+def search_case_law(keywords: str) -> str:
+    """Tìm kiếm án lệ theo từ khóa.
+    
+    Args:
+        keywords: Từ khóa tìm kiếm
+    """
+    cases = {
+        "breach": "Hadley v. Baxendale (1854) - Consequential damages",
+        "negligence": "Donoghue v. Stevenson (1932) - Duty of care",
+        "contract": "Carlill v. Carbolic Smoke Ball Co (1893) - Unilateral contract",
+    }
+    for key, case in cases.items():
+        if key in keywords.lower():
+            return case
+    return "Không tìm thấy án lệ phù hợp"
+
+TOOLS = [search_legal_database, calculate_penalty, check_compliance_requirements, search_case_law]
 
 QUESTION = (
     "A tech startup with $5M revenue was caught sharing user data without consent "
@@ -189,6 +206,7 @@ SYSTEM_PROMPT = (
 
 async def main():
     from langgraph.prebuilt import create_react_agent
+    from langchain.agents import create_agent
 
     print("=" * 70)
     print("STAGE 3: Single Agent (ReAct Loop)")
@@ -205,12 +223,12 @@ async def main():
     print("-" * 70)
 
     llm = get_llm()
-    graph = create_react_agent(model=llm, tools=TOOLS, prompt=SYSTEM_PROMPT)
+    graph = create_agent(model=llm, tools=TOOLS, system_prompt=SYSTEM_PROMPT)
 
     inputs = {"messages": [{"role": "user", "content": QUESTION}]}
 
     step = 0
-    async for chunk in graph.astream(inputs, stream_mode="updates"):
+    async for chunk in graph.astream(inputs, {"verbose": True}, stream_mode="updates"):
         for node_name, update in chunk.items():
             step += 1
             messages = update.get("messages", [])
